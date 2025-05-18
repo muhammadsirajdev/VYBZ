@@ -1,0 +1,125 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-8 mx-auto">
+      <!-- Profile Header -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-4">
+            <img src="<%= profileUser.profilePic || '/images/default-avatar.png' %>" 
+                 alt="<%= profileUser.username %>" 
+                 class="rounded-circle me-4"
+                 style="width: 100px; height: 100px; object-fit: cover;">
+            <div>
+              <h2 class="mb-1"><%= profileUser.username %></h2>
+              <p class="text-muted mb-2"><%= profileUser.fullname %></p>
+              <div class="d-flex gap-3 mb-3">
+                <div>
+                  <strong id="follower-count"><%= followerCount %></strong> followers
+                </div>
+                <div>
+                  <strong id="following-count"><%= followingCount %></strong> following
+                </div>
+              </div>
+
+              <% if (currentUser && profileUser._id.toString() !== currentUser._id.toString()) { %>
+                <button id="follow-btn" 
+                        data-user-id="<%= profileUser._id %>" 
+                        class="btn <%= isFollowing ? 'btn-secondary' : 'btn-primary' %>">
+                  <%= isFollowing ? 'Unfollow' : 'Follow' %>
+                </button>
+              <% } %>
+            </div>
+          </div>
+
+          <% if (profileUser.bio) { %>
+            <p class="mb-0"><%= profileUser.bio %></p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- User's Posts -->
+      <div class="posts">
+        <% if (posts && posts.length > 0) { %>
+          <% posts.forEach(post => { %>
+            <div class="card mb-4">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 d-flex align-items-center">
+                  <img src="<%= post.user.profilePic || '/images/default-avatar.png' %>" 
+                       alt="<%= post.user.username %>" 
+                       class="rounded-circle me-2"
+                       style="width: 32px; height: 32px; object-fit: cover;">
+                  <%= post.user.username %>
+                </h5>
+                <small class="text-muted">
+                  <%= new Date(post.createdAt).toLocaleString() %>
+                </small>
+              </div>
+              <div class="card-body">
+                <p class="card-text"><%= post.content %></p>
+                <% if (post.image) { %>
+                  <img src="<%= post.image %>" alt="Post image" class="img-fluid rounded mt-2">
+                <% } %>
+              </div>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="card">
+            <div class="card-body text-center">
+              <p class="mb-0">No posts yet.</p>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const followBtn = document.getElementById("follow-btn");
+
+    if (followBtn) {
+      followBtn.addEventListener("click", async function (e) {
+        e.preventDefault(); // prevent page reload
+
+        const userId = followBtn.getAttribute("data-user-id");
+
+        try {
+          const res = await fetch(`/users/follow/${userId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            // Toggle button text & styles
+            followBtn.textContent = data.isFollowing ? "Unfollow" : "Follow";
+            followBtn.classList.toggle("btn-primary", !data.isFollowing);
+            followBtn.classList.toggle("btn-secondary", data.isFollowing);
+
+            // Update follower and following counts
+            const followerCountElem = document.getElementById('follower-count');
+            const followingCountElem = document.getElementById('following-count');
+
+            if (followerCountElem && followingCountElem) {
+              followerCountElem.textContent = data.followerCount;
+              followingCountElem.textContent = data.followingCount;
+            }
+          } else {
+            alert("Something went wrong!");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Error connecting to server.");
+        }
+      });
+    }
+  });
+</script>

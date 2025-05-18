@@ -1,0 +1,50 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-8 mx-auto">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h2 class="mb-0">My Posts</h2>
+        </div>
+      </div>
+
+      <!-- Display Posts -->
+      <div class="posts">
+        <% if (posts && posts.length > 0) { %>
+          <% posts.forEach(post => { %>
+            <div class="card mb-4">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                  <img src="<%= post.user.profilePic || '/images/default-avatar.png' %>" 
+                       alt="<%= post.user.username %>" 
+                       class="rounded-circle me-2"
+                       style="width: 32px; height: 32px; object-fit: cover;">
+                  <%= post.user.username %>
+                </h5>
+                <small class="text-muted">
+                  <%= new Date(post.createdAt).toLocaleString() %>
+                </small>
+              </div>
+              <div class="card-body">
+                <p class="card-text"><%= post.content %></p>
+                <% if (post.image) { %>
+                  <img src="<%= post.image %>" alt="Post image" class="img-fluid rounded">
+                <% } %>
+              </div>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="card">
+            <div class="card-body text-center">
+              <p class="mb-0">You haven't created any posts yet.</p>
+              <a href="/posts/create" class="btn btn-primary mt-3">Create Your First Post</a>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %> 

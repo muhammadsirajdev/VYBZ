@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Signup</title>
+</head>
+<body>
+  <h1>Signup Page</h1>
+
+  <% if (typeof error !== 'undefined') { %>
+    <p style="color:red;"><%= error %></p>
+  <% } %>
+
+  <form action="/signup" method="POST">
+    <label>Full Name:</label><br>
+    <input type="text" name="fullname" required><br><br>
+
+    <label>Username:</label><br>
+    <input type="text" name="username" required><br><br>
+
+    <label>Email:</label><br>
+    <input type="email" name="email" required><br><br>
+
+    <label>Password:</label><br>
+    <input type="password" name="password" required><br><br>
+
+    <label>Bio:</label><br>
+    <textarea name="bio"></textarea><br><br>
+
+    <button type="submit">Signup</button>
+  </form>
+</body>
+</html>

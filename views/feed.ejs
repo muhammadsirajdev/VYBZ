@@ -1,0 +1,166 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-8 mx-auto">
+      <!-- Search Users -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <form action="search" method="GET" class="d-flex">
+            <input type="text" name="q" class="form-control me-2" placeholder="Search users..." required>
+            <button type="submit" class="btn btn-primary">Search</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Create Post Form -->
+       <%- include('./createPost') %>
+
+      <!-- Posts Feed -->
+      <div class="posts">
+        <% if (posts && posts.length > 0) { %>
+          <% posts.forEach(post => { %>
+            <div class="card mb-4">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                  <img src="<%= post.user.profilePic || '/images/default-avatar.png' %>" 
+                       alt="<%= post.user.username %>" 
+                       class="rounded-circle me-2"
+                       style="width: 32px; height: 32px; object-fit: cover;">
+                  <%= post.user.username %>
+                </h5>
+                <div class="d-flex align-items-center">
+                  <% if (post.user._id.toString() === currentUser._id.toString()) { %>
+                    <button class="btn btn-danger btn-sm delete-post me-2" data-post-id="<%= post._id %>">Delete</button>
+                  <% } %>
+                  <small class="text-muted">
+                    <%= new Date(post.createdAt).toLocaleString() %>
+                  </small>
+                </div>
+              </div>
+              <div class="card-body">
+                <p class="card-text"><%= post.content %></p>
+                <% if (post.image) { %>
+                  <img src="<%= post.image %>" alt="Post image" class="img-fluid rounded">
+                <% } %>
+                <button class="btn btn-outline-primary btn-sm like-post" data-post-id="<%= post._id %>">
+                  <i class="fas fa-heart"></i> 
+                  <span class="like-count">Like :<%= post.likes.length %></span>
+                </button>
+              </div>
+              <div class="comments-section">
+                <form class="comment-form" data-post-id="<%= post._id %>">
+                  <input type="text" class="form-control" placeholder="Write a comment...">
+                  <button type="submit" class="btn btn-primary btn-sm">Comment</button>
+                </form>
+                
+                <div class="comments-list">
+                  <% post.comments.forEach(comment => { %>
+                    <div class="comment">
+                      <strong><%= comment.user.username %></strong>
+                      <p><%= comment.comment %></p>
+                      <% if (comment.user._id.toString() === currentUser._id.toString()) { %>
+                        <button class="btn btn-danger btn-sm delete-comment" 
+                                data-post-id="<%= post._id %>" 
+                                data-comment-id="<%= comment._id %>">Delete</button>
+                      <% } %>
+                    </div>
+                  <% }); %>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="card">
+            <div class="card-body text-center">
+              <p class="mb-0">No posts yet. Follow some users to see their posts here!</p>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script>
+// Like/Unlike Post
+document.querySelectorAll('.like-post').forEach(button => {
+  button.addEventListener('click', async (e) => {
+    const postId = e.target.dataset.postId;
+    try {
+      const res = await fetch(`/posts/${postId}/like`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      // Update like count
+      e.target.querySelector('.like-count').textContent = data.length;
+    } catch (err) {
+      console.error('Error liking post:', err);
+    }
+  });
+});
+
+// Add Comment
+document.querySelectorAll('.comment-form').forEach(form => {
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const postId = e.target.dataset.postId;
+    const comment = e.target.querySelector('input').value;
+    
+    try {
+      const res = await fetch(`/posts/${postId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comment })
+      });
+      const data = await res.json();
+      // Update comments list
+      // You'll need to implement this based on your UI
+    } catch (err) {
+      console.error('Error adding comment:', err);
+    }
+  });
+});
+
+// Delete Post
+document.querySelectorAll('.delete-post').forEach(button => {
+  button.addEventListener('click', async (e) => {
+    if (confirm('Are you sure you want to delete this post?')) {
+      const postId = e.target.dataset.postId;
+      try {
+        await fetch(`/posts/${postId}`, {
+          method: 'DELETE'
+        });
+        // Remove post from UI
+        e.target.closest('.card').remove();
+      } catch (err) {
+        console.error('Error deleting post:', err);
+      }
+    }
+  });
+});
+
+// Delete Comment
+document.querySelectorAll('.delete-comment').forEach(button => {
+  button.addEventListener('click', async (e) => {
+    if (confirm('Are you sure you want to delete this comment?')) {
+      const postId = e.target.dataset.postId;
+      const commentId = e.target.dataset.commentId;
+      try {
+        const res = await fetch(`/posts/${postId}/comments/${commentId}`, {
+          method: 'DELETE'
+        });
+        if (res.ok) {
+          // Remove comment from UI
+          e.target.closest('.comment').remove();
+        }
+      } catch (err) {
+        console.error('Error deleting comment:', err);
+      }
+    }
+  });
+});
+</script>
